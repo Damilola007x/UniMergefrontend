@@ -1,0 +1,200 @@
+:root {
+    --bg-dark: #0f172a;
+    --card-bg: #1e293b;
+    --sidebar-bg: #111827;
+    --primary-blue: #38bdf8;
+    --accent-purple: #818cf8;
+    --success-green: #4ade80;
+    --text-main: #f1f5f9;
+    --text-dim: #94a3b8;
+    --border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* --- Login Overlay --- */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.login-box {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 16px;
+    width: 400px;
+    border: 1px solid var(--border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    text-align: center;
+}
+
+.login-box h1 span { color: var(--primary-blue); }
+
+input, select {
+    width: 100%;
+    padding: 0.8rem;
+    margin: 0.8rem 0;
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: white;
+    border-radius: 8px;
+    outline: none;
+}
+
+button {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-purple));
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 1rem;
+}
+
+button:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+}
+
+/* --- Main Dashboard Layout --- */
+.container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    height: 100vh;
+}
+
+/* Sidebar Process Tracker */
+.process-tracker {
+    background: var(--sidebar-bg);
+    padding: 2rem;
+    border-right: 1px solid var(--border);
+}
+
+.process-tracker h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 2rem;
+    letter-spacing: 1px;
+}
+
+#flow-list {
+    list-style: none;
+}
+
+#flow-list li {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    position: relative;
+    transition: 0.3s;
+}
+
+#flow-list li.active {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--primary-blue);
+    font-weight: 600;
+    border-left: 4px solid var(--primary-blue);
+}
+
+/* Content Area */
+.content {
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 1.5rem;
+}
+
+/* --- The Agent Console (Hacker Style) --- */
+.console-card {
+    background: #000 !important;
+    border: 1px solid var(--primary-blue) !important;
+}
+
+.logs {
+    height: 400px;
+    overflow-y: auto;
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 0.85rem;
+    padding: 10px;
+    line-height: 1.6;
+}
+
+.log-info { color: #94a3b8; }
+.log-process { color: var(--accent-purple); }
+.log-msg { color: var(--primary-blue); font-weight: bold; }
+.log-success { color: var(--success-green); }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+.download-slip-btn {
+    background: linear-gradient(135deg, #059669, #10b981) !important;
+    margin-top: 20px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+/* Console Log Styling */
+.logs {
+    background: #1a1a1a;
+    color: #00ff00;
+    padding: 15px;
+    height: 300px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    border-radius: 5px;
+    border: 1px solid #333;
+}
+
+.log-info { color: #38bdf8; }
+.log-process { color: #fbbf24; }
+.log-msg { color: #a78bfa; font-style: italic; }
+.log-success { color: #22c55e; font-weight: bold; }
+.log-error { color: #ef4444; }
+
+.active {
+    color: #38bdf8;
+    font-weight: bold;
+    border-left: 3px solid #38bdf8;
+    padding-left: 10px;
+}

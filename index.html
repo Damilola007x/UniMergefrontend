@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UniMerge - Login</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; color: white; }
+        .login-card { background: #1e293b; padding: 40px; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); width: 350px; text-align: center; }
+        h2 { color: #38bdf8; margin: 0 0 20px 0; }
+        select, input, button { width: 100%; padding: 12px; margin-top: 15px; border-radius: 6px; border: none; font-size: 14px; box-sizing: border-box; }
+        input { background: #334155; color: white; border: 1px solid #475569; }
+        input:focus { outline: 2px solid #38bdf8; border: none; }
+        button { background: #38bdf8; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 25px; }
+        button:hover { background: #0ea5e9; transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>UniMerge MAS</h2>
+        <p>Secure Agent Access</p>
+        
+        <select id="role">
+            <option value="student">Student Portal</option>
+            <option value="lecturer">Lecturer Portal</option>
+        </select>
+        
+        <input type="text" id="loginId" placeholder="Matric No / Staff ID">
+        <input type="password" id="loginPass" placeholder="Password">
+        
+        <button onclick="handleLogin()">Enter System</button>
+    </div>
+
+    <script>
+        async function handleLogin() {
+            const role = document.getElementById('role').value;
+            const loginId = document.getElementById('loginId').value;
+            const loginPass = document.getElementById('loginPass').value;
+
+            if(!loginId || !loginPass) {
+                return alert("Please enter both ID and Password");
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/api/schedule/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    // Sending password to backend now
+                    body: JSON.stringify({ role, loginId, password: loginPass })
+                });
+                
+                const result = await response.text();
+
+                if (result.startsWith("SUCCESS")) {
+                    localStorage.setItem("userName", result.split(":")[1]);
+                    localStorage.setItem("userId", loginId);
+                    window.location.href = role + ".html";
+                } else {
+                    alert(result); // Show "Invalid Password" or "User Not Found"
+                }
+            } catch (e) {
+                alert("Backend Error: Ensure Spring Boot is running.");
+            }
+        }
+    </script>
+</body>
+</html>
