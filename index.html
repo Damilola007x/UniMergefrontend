@@ -30,37 +30,56 @@
         <button onclick="handleLogin()">Enter System</button>
     </div>
 
-    <script>
-        async function handleLogin() {
-            const role = document.getElementById('role').value;
-            const loginId = document.getElementById('loginId').value;
-            const loginPass = document.getElementById('loginPass').value;
+   <script>
+    // Point to your LIVE backend on Render
+    const API_BASE_URL = "https://unimerge.onrender.com";
 
-            if(!loginId || !loginPass) {
-                return alert("Please enter both ID and Password");
-            }
+    async function handleLogin() {
+        const role = document.getElementById('role').value;
+        const loginId = document.getElementById('loginId').value;
+        const loginPass = document.getElementById('loginPass').value;
 
-            try {
-                const response = await fetch('http://localhost:8080/api/schedule/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    // Sending password to backend now
-                    body: JSON.stringify({ role, loginId, password: loginPass })
-                });
-                
-                const result = await response.text();
-
-                if (result.startsWith("SUCCESS")) {
-                    localStorage.setItem("userName", result.split(":")[1]);
-                    localStorage.setItem("userId", loginId);
-                    window.location.href = role + ".html";
-                } else {
-                    alert(result); // Show "Invalid Password" or "User Not Found"
-                }
-            } catch (e) {
-                alert("Backend Error: Ensure Spring Boot is running.");
-            }
+        // Basic Validation
+        if(!loginId || !loginPass) {
+            return alert("Please enter both ID and Password");
         }
-    </script>
+
+        try {
+            // Step 1: Request authentication from the backend
+            const response = await fetch(`${API_BASE_URL}/api/schedule/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    role: role, 
+                    loginId: loginId, 
+                    password: loginPass 
+                })
+            });
+            
+            const result = await response.text();
+
+            // Step 2: Check if login was successful
+            if (result.startsWith("SUCCESS")) {
+                // Extract name from "SUCCESS:Name"
+                const userName = result.split(":")[1];
+
+                // Step 3: Save session data to localStorage
+                // This allows lecturer.html and student.html to "remember" who you are
+                localStorage.setItem("userName", userName);
+                localStorage.setItem("loginId", loginId); 
+                
+                // Step 4: Redirect to the specific dashboard
+                // This will go to either "student.html" or "lecturer.html"
+                window.location.href = role + ".html";
+            } else {
+                // Show the specific error from the Java backend (e.g., "Invalid Password")
+                alert(result); 
+            }
+        } catch (e) {
+            console.error("Login Error:", e);
+            alert("CONNECTION ERROR: Ensure the Render service is 'Live' and not sleeping. Open the Render URL in a new tab to wake it up.");
+        }
+    }
+</script>
 </body>
 </html>

@@ -67,41 +67,61 @@
         </div>
     </div>
 </section>
-
 <script>
+/**
+ * UniMerge MAS - Lecturer Logic (lecturer.js)
+ */
+
+// 1. Point to your LIVE backend on Render
+const API_BASE_URL = "https://unimerge.onrender.com"; 
+
+// 2. Load the personalized name on startup
+window.onload = () => {
     const userName = localStorage.getItem("userName") || "Lecturer";
-    document.getElementById('welcome-msg').innerText = `Policy Manager: ${userName}`;
-
-    async function updatePolicy() {
-        const venue = document.getElementById('venueSelect').value;
-        const daysArray = Array.from(document.querySelectorAll('input[name="blocked"]:checked')).map(c => c.value);
-        const days = daysArray.join(",");
-        const logs = document.getElementById('policy-logs');
-
-        logs.innerHTML += `<p class="log-broadcast">[${new Date().toLocaleTimeString()}] Broadcasting ACL_INFORM: New Constraints Set.</p>`;
-
-        try {
-            const resp = await fetch('http://localhost:8080/api/schedule/constraints', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ venueName: venue, prohibitedDays: days })
-            });
-
-            if (resp.ok) {
-                setTimeout(() => {
-                    logs.innerHTML += `<p class="log-confirm">VenueAgent: Knowledge Base Updated.</p>`;
-                    logs.innerHTML += `<p class="log-confirm">-> Active Venue: ${venue}</p>`;
-                    logs.innerHTML += `<p class="log-confirm">-> Blacklisted: ${days || 'None'}</p>`;
-                    logs.scrollTop = logs.scrollHeight;
-                }, 800);
-            } else {
-                logs.innerHTML += `<p style="color: #f43f5e;">Error: Could not update Agent Environment.</p>`;
-            }
-        } catch (e) {
-            logs.innerHTML += `<p style="color: #f43f5e;">Connection Error: Check Backend Server.</p>`;
-        }
+    const welcomeHeader = document.getElementById('welcome-msg');
+    if (welcomeHeader) {
+        welcomeHeader.innerText = `Policy Manager: ${userName}`;
     }
-</script>
+};
 
+// 3. Update Policy / Broadcast Constraints
+async function updatePolicy() {
+    const venue = document.getElementById('venueSelect').value;
+    const daysArray = Array.from(document.querySelectorAll('input[name="blocked"]:checked')).map(c => c.value);
+    const days = daysArray.join(",");
+    const logs = document.getElementById('policy-logs');
+
+    // Visual Log: Broadcasting
+    logs.innerHTML += `<p class="log-broadcast">[${new Date().toLocaleTimeString()}] Broadcasting ACL_INFORM: New Constraints Set.</p>`;
+
+    try {
+        // Updated from localhost to your Render URL
+        const resp = await fetch(`${API_BASE_URL}/api/schedule/constraints`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                venueName: venue, 
+                prohibitedDays: days 
+            })
+        });
+
+        if (resp.ok) {
+            setTimeout(() => {
+                logs.innerHTML += `<p class="log-confirm">VenueAgent: Knowledge Base Updated.</p>`;
+                logs.innerHTML += `<p class="log-confirm">-> Active Venue: ${venue}</p>`;
+                logs.innerHTML += `<p class="log-confirm">-> Blacklisted: ${days || 'None'}</p>`;
+                logs.scrollTop = logs.scrollHeight;
+                alert("Constraints Synchronized with VenueAgent!");
+            }, 800);
+        } else {
+            logs.innerHTML += `<p style="color: #f43f5e;">Error: Could not update Agent Environment (Status: ${resp.status})</p>`;
+        }
+    } catch (e) {
+        console.error(e);
+        logs.innerHTML += `<p style="color: #f43f5e;">Connection Error: Ensure Render backend is LIVE.</p>`;
+        alert("CRITICAL: Backend unreachable. Is your Render service sleeping?");
+    }
+}
+</script>
 </body>
 </html>

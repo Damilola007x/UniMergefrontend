@@ -63,90 +63,122 @@
 </section>
 
 <script>
-    // Initialize user data from Login
-    const userName = localStorage.getItem("userName") || "Student";
-    const userId = localStorage.getItem("userId");
-    document.getElementById('welcome-msg').innerText = `Welcome, ${userName}`;
+  /**
+ * UniMerge MAS - Student Logic (student.js)
+ */
 
-    async function spawnAgent() {
-        const courseRaw = document.getElementById('courseCode').value.trim();
-        const course = courseRaw.replace(/\s+/g, '').toUpperCase();
-        const venue = document.getElementById('preferredVenue').value;
-        const day = document.getElementById('preferredDay').value;
-        const logs = document.getElementById('agent-logs');
+// 1. Point to your LIVE backend on Render
+const API_BASE_URL = "https://unimerge.onrender.com"; 
 
-        if (!course) return alert("Please enter a course code");
+// 2. Initialize user data from localStorage
+const userName = localStorage.getItem("userName") || "Student";
+const loginId = localStorage.getItem("loginId"); // Matches the key used in script.js
+const welcomeMsg = document.getElementById('welcome-msg');
 
-        // Clear logs and show initialization
-        logs.innerHTML = `<p class="log-msg">[${new Date().toLocaleTimeString()}] StudentAgent: Initializing negotiation for ${course}...</p>`;
+if (welcomeMsg) {
+    welcomeMsg.innerText = `Welcome, ${userName}`;
+}
 
-        try {
-            const resp = await fetch('http://localhost:8080/api/schedule/negotiate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    matricNumber: userId, 
-                    courseCode: course, 
-                    preferredVenue: venue, 
-                    preferredDay: day 
-                })
-            });
+// 3. Trigger the Multi-Agent Negotiation
+async function spawnAgent() {
+    const courseRaw = document.getElementById('courseCode').value.trim();
+    const course = courseRaw.replace(/\s+/g, '').toUpperCase();
+    const venue = document.getElementById('preferredVenue').value;
+    const day = document.getElementById('preferredDay').value;
+    const logs = document.getElementById('agent-logs');
 
-            const result = await resp.text();
+    if (!course) return alert("Please enter a course code (e.g., CSC301)");
 
-            if (result.startsWith("AGENT_SPAWNED")) {
-                const p = result.split(":"); // [Status, Course, Name, Day, Venue]
-                runCNP(p[1], p[3], p[4]);
-            } else {
-                logs.innerHTML += `<p class="log-error">[${new Date().toLocaleTimeString()}] VenueAgent: ACL_REFUSE</p>`;
-                logs.innerHTML += `<p class="log-error">REASON: ${result}</p>`;
-            }
-        } catch (e) {
-            logs.innerHTML += `<p class="log-error">CONNECTION ERROR: Check Spring Boot server.</p>`;
+    // Reset logs for new negotiation
+    logs.innerHTML = `<p class="log-msg">[${new Date().toLocaleTimeString()}] StudentAgent: Initializing negotiation for ${course}...</p>`;
+
+    try {
+        // Updated from localhost to Render URL
+        const resp = await fetch(`${API_BASE_URL}/api/schedule/negotiate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                matricNumber: loginId, 
+                courseCode: course, 
+                preferredVenue: venue, 
+                preferredDay: day 
+            })
+        });
+
+        const result = await resp.text();
+
+        if (result.startsWith("AGENT_SPAWNED")) {
+            const p = result.split(":"); // [Status, Course, Name, Day, Venue]
+            runCNP(p[1], p[3], p[4]);
+        } else {
+            logs.innerHTML += `<p class="log-error">[${new Date().toLocaleTimeString()}] VenueAgent: ACL_REFUSE</p>`;
+            logs.innerHTML += `<p class="log-error">REASON: ${result}</p>`;
+            // Alert the user to the specific reason (e.g., Blacklisted day or Wrong course)
+            alert(result);
         }
+    } catch (e) {
+        console.error(e);
+        logs.innerHTML += `<p class="log-error">CONNECTION ERROR: Ensure Render backend is LIVE.</p>`;
     }
+}
 
-    function runCNP(course, day, venue) {
-        const logs = document.getElementById('agent-logs');
-        
-        
+// 4. Contract Net Protocol (CNP) Visual Simulation
+function runCNP(course, day, venue) {
+    const logs = document.getElementById('agent-logs');
+    
+    setTimeout(() => { 
+        logs.innerHTML += `<p class="log-msg">StudentAgent -> VenueAgent: ACL_CFP (Requesting slot for ${course})</p>`;
+        logs.scrollTop = logs.scrollHeight;
+    }, 800);
 
-        setTimeout(() => { 
-            logs.innerHTML += `<p class="log-msg">StudentAgent -> VenueAgent: ACL_CFP (Requesting slot for ${course})</p>`;
-            logs.scrollTop = logs.scrollHeight;
-        }, 800);
+    setTimeout(() => { 
+        logs.innerHTML += `<p class="log-msg">VenueAgent -> StudentAgent: ACL_PROPOSE (Proposed: ${venue} on ${day})</p>`;
+        logs.scrollTop = logs.scrollHeight;
+    }, 2200);
 
-        setTimeout(() => { 
-            logs.innerHTML += `<p class="log-msg">VenueAgent -> StudentAgent: ACL_PROPOSE (Proposed: ${venue} on ${day})</p>`;
-            logs.scrollTop = logs.scrollHeight;
-        }, 2200);
+    setTimeout(() => { 
+        logs.innerHTML += `<p class="log-success">StudentAgent: ACL_ACCEPT_PROPOSAL</p>`;
+        logs.scrollTop = logs.scrollHeight;
+    }, 3500);
 
-        setTimeout(() => { 
-            logs.innerHTML += `<p class="log-success">StudentAgent: ACL_ACCEPT_PROPOSAL</p>`;
-            logs.scrollTop = logs.scrollHeight;
-        }, 3500);
+    setTimeout(() => { 
+        logs.innerHTML += `<p class="log-success">VenueAgent: ACL_INFORM (Negotiation Finalized for ${course})</p>`;
+        logs.scrollTop = logs.scrollHeight;
+        showDownloadBtn(course, day, venue);
+    }, 5000);
+}
 
-        setTimeout(() => { 
-            logs.innerHTML += `<p class="log-success">VenueAgent: ACL_INFORM (Negotiation Finalized for ${course})</p>`;
-            logs.scrollTop = logs.scrollHeight;
-            showDownloadBtn(course, day, venue);
-        }, 5000);
-    }
-
-    function showDownloadBtn(c, d, v) {
-        const logs = document.getElementById('agent-logs');
-        const btn = document.createElement('button');
-        btn.innerText = "Download Exam Slip";
-        btn.className = "spawn-btn";
-        btn.style.background = "#10b981";
-        btn.style.marginTop = "15px";
-        btn.onclick = () => {
-             const win = window.open('', '_blank');
-             win.document.write(`<div style="border:5px solid #38bdf8; padding:20px; font-family:sans-serif; text-align:center;"><h1>Exam Slip</h1><p>Student: ${userName}</p><p>Course: ${c}</p><p>Venue: ${v}</p><p>Day: ${d}</p></div>`);
-             win.print();
-        };
-        logs.appendChild(btn);
-    }
+// 5. Generate Exam Slip
+function showDownloadBtn(c, d, v) {
+    const logs = document.getElementById('agent-logs');
+    const btn = document.createElement('button');
+    btn.innerText = "📥 Download Exam Slip";
+    btn.className = "spawn-btn";
+    btn.style.background = "#10b981";
+    btn.style.marginTop = "15px";
+    
+    btn.onclick = () => {
+         const win = window.open('', '_blank');
+         win.document.write(`
+            <div style="border:10px solid #38bdf8; padding:30px; font-family:sans-serif; text-align:center; max-width:500px; margin:auto;">
+                <h1 style="color:#1e293b;">UniMerge MAS</h1>
+                <h2>Official Exam Slip</h2>
+                <hr>
+                <p><strong>Student Name:</strong> ${userName}</p>
+                <p><strong>Matric Number:</strong> ${loginId}</p>
+                <p><strong>Course Code:</strong> ${c}</p>
+                <p><strong>Assigned Venue:</strong> ${v}</p>
+                <p><strong>Scheduled Day:</strong> ${d}</p>
+                <br>
+                <p style="color:#10b981; font-weight:bold;">VERIFIED BY AGENT NEGOTIATION</p>
+                <small>Generated on: ${new Date().toLocaleString()}</small>
+            </div>
+         `);
+         win.document.close();
+         win.print();
+    };
+    logs.appendChild(btn);
+}
 </script>
 
 </body>
