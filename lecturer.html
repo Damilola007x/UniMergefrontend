@@ -10,13 +10,12 @@
         h2 { margin-top: 0; color: #38bdf8; font-size: 1.5rem; }
         .form-input { background: #334155; color: white; border: 1px solid #475569; padding: 12px; border-radius: 6px; margin-top: 5px; width: 100%; box-sizing: border-box; }
         
-        /* Checkbox Styling */
         .blacklist-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid #334155; }
         .day-option { display: flex; align-items: center; font-size: 0.9rem; color: #94a3b8; cursor: pointer; }
         .day-option input { margin-right: 10px; accent-color: #38bdf8; }
         
-        .broadcast-btn { background: #38bdf8; color: white; font-weight: bold; padding: 14px; border: none; border-radius: 6px; width: 100%; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .broadcast-btn:hover { background: #38bdf8; transform: translateY(-2px); box-shadow: 0 0 15px rgba(244, 63, 94, 0.4); }
+        .broadcast-btn { background: #38bdf8; color: #0f172a; font-weight: bold; padding: 14px; border: none; border-radius: 6px; width: 100%; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .broadcast-btn:hover { background: #0ea5e9; transform: translateY(-2px); box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
         
         .logs { background: #000; border-radius: 8px; padding: 15px; height: 350px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 13px; border: 1px solid #334155; }
         .sys-note { color: #64748b; font-style: italic; }
@@ -24,13 +23,13 @@
         .log-confirm { color: #4ade80; margin: 5px 0; }
         
         .logout-btn { background: #475569; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; float: right; transition: 0.3s; }
-        .logout-btn:hover { background: #38bdf8; }
+        .logout-btn:hover { background: #f43f5e; }
         label { color: #94a3b8; font-size: 0.85rem; margin-top: 10px; display: block; }
     </style>
 </head>
 <body>
 
-<button class="logout-btn" onclick="location.href='index.html'">Logout</button>
+<button class="logout-btn" onclick="logout()">Logout</button>
 
 <section id="lecturer-view">
     <div class="grid-2">
@@ -39,12 +38,12 @@
             
             <label>Designated Examination Venue:</label>
             <select id="venueSelect" class="form-input">
-                <option value="Hall A">School Auditorium </option>
-                <option value="Hall B">Mass-Com Auditorium</option> 
-                <option value="Hall C">Multipurpose Hall</option>
-                <option value="Hall A">E-Library </option>
-                <option value="Hall B">Library Block A</option> 
-                <option value="Hall C">Library Block B</option>
+                <option value="School Auditorium">School Auditorium</option>
+                <option value="Mass-Com Auditorium">Mass-Com Auditorium</option> 
+                <option value="Multipurpose Hall">Multipurpose Hall</option>
+                <option value="E-Library">E-Library</option> 
+                <option value="Library Block A">Library Block A</option> 
+                <option value="Library Block B">Library Block B</option>
             </select>
 
             <label>Restrict Specific Days (Blacklist):</label>
@@ -67,61 +66,51 @@
         </div>
     </div>
 </section>
+
 <script>
-/**
- * UniMerge MAS - Lecturer Logic (lecturer.js)
- */
-
-// 1. Point to your LIVE backend on Render
-const API_BASE_URL = "https://unimerge.onrender.com"; 
-
-// 2. Load the personalized name on startup
-window.onload = () => {
+    // Configuration
+    const API_BASE_URL = "https://unimerge.onrender.com";
     const userName = localStorage.getItem("userName") || "Lecturer";
-    const welcomeHeader = document.getElementById('welcome-msg');
-    if (welcomeHeader) {
-        welcomeHeader.innerText = `Policy Manager: ${userName}`;
+    
+    document.getElementById('welcome-msg').innerText = `Policy Manager: ${userName}`;
+
+    function logout() {
+        localStorage.clear();
+        location.href = 'index.html';
     }
-};
 
-// 3. Update Policy / Broadcast Constraints
-async function updatePolicy() {
-    const venue = document.getElementById('venueSelect').value;
-    const daysArray = Array.from(document.querySelectorAll('input[name="blocked"]:checked')).map(c => c.value);
-    const days = daysArray.join(",");
-    const logs = document.getElementById('policy-logs');
+    async function updatePolicy() {
+        const venue = document.getElementById('venueSelect').value;
+        const daysArray = Array.from(document.querySelectorAll('input[name="blocked"]:checked')).map(c => c.value);
+        const days = daysArray.join(",");
+        const logs = document.getElementById('policy-logs');
 
-    // Visual Log: Broadcasting
-    logs.innerHTML += `<p class="log-broadcast">[${new Date().toLocaleTimeString()}] Broadcasting ACL_INFORM: New Constraints Set.</p>`;
+        logs.innerHTML += `<p class="log-broadcast">[${new Date().toLocaleTimeString()}] Broadcasting ACL_INFORM: New Constraints Set.</p>`;
+        logs.scrollTop = logs.scrollHeight;
 
-    try {
-        // Updated from localhost to your Render URL
-        const resp = await fetch(`${API_BASE_URL}/api/schedule/constraints`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                venueName: venue, 
-                prohibitedDays: days 
-            })
-        });
+        try {
+            // CHANGED: Pointing to Render
+            const resp = await fetch(`${API_BASE_URL}/api/schedule/constraints`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ venueName: venue, prohibitedDays: days || "None" })
+            });
 
-        if (resp.ok) {
-            setTimeout(() => {
-                logs.innerHTML += `<p class="log-confirm">VenueAgent: Knowledge Base Updated.</p>`;
-                logs.innerHTML += `<p class="log-confirm">-> Active Venue: ${venue}</p>`;
-                logs.innerHTML += `<p class="log-confirm">-> Blacklisted: ${days || 'None'}</p>`;
-                logs.scrollTop = logs.scrollHeight;
-                alert("Constraints Synchronized with VenueAgent!");
-            }, 800);
-        } else {
-            logs.innerHTML += `<p style="color: #f43f5e;">Error: Could not update Agent Environment (Status: ${resp.status})</p>`;
+            if (resp.ok) {
+                setTimeout(() => {
+                    logs.innerHTML += `<p class="log-confirm">VenueAgent: Knowledge Base Updated.</p>`;
+                    logs.innerHTML += `<p class="log-confirm">-> Active Venue: ${venue}</p>`;
+                    logs.innerHTML += `<p class="log-confirm">-> Blacklisted: ${days || 'None'}</p>`;
+                    logs.scrollTop = logs.scrollHeight;
+                }, 800);
+            } else {
+                logs.innerHTML += `<p style="color: #f43f5e;">Error: Server responded with status ${resp.status}.</p>`;
+            }
+        } catch (e) {
+            logs.innerHTML += `<p style="color: #f43f5e;">Connection Error: Ensure Render backend is live.</p>`;
         }
-    } catch (e) {
-        console.error(e);
-        logs.innerHTML += `<p style="color: #f43f5e;">Connection Error: Ensure Render backend is LIVE.</p>`;
-        alert("CRITICAL: Backend unreachable. Is your Render service sleeping?");
     }
-}
 </script>
+
 </body>
 </html>
