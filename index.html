@@ -12,6 +12,7 @@
         input:focus { outline: 2px solid #38bdf8; border: none; }
         button { background: #38bdf8; color: #0f172a; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 25px; }
         button:hover { background: #0ea5e9; transform: translateY(-2px); }
+        .status { font-size: 12px; margin-top: 10px; color: #94a3b8; }
     </style>
 </head>
 <body>
@@ -28,9 +29,13 @@
         <input type="password" id="loginPass" placeholder="Password">
         
         <button onclick="handleLogin()">Enter System</button>
+        <div id="connection-status" class="status">Connecting to Render Cloud...</div>
     </div>
 
     <script>
+        // TARGETING RENDER CLOUD
+        const API_BASE_URL = "https://unimerge.onrender.com";
+
         async function handleLogin() {
             const role = document.getElementById('role').value;
             const loginId = document.getElementById('loginId').value;
@@ -40,11 +45,13 @@
                 return alert("Please enter both ID and Password");
             }
 
+            document.getElementById('connection-status').innerText = "Authenticating with Agents...";
+
             try {
-                const response = await fetch('http://localhost:8080/api/schedule/login', {
+                // FIXED: Now using the Render URL instead of localhost
+                const response = await fetch(`${API_BASE_URL}/api/schedule/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // Sending password to backend now
                     body: JSON.stringify({ role, loginId, password: loginPass })
                 });
                 
@@ -52,13 +59,16 @@
 
                 if (result.startsWith("SUCCESS")) {
                     localStorage.setItem("userName", result.split(":")[1]);
-                    localStorage.setItem("userId", loginId);
+                    localStorage.setItem("loginId", loginId);
                     window.location.href = role + ".html";
                 } else {
-                    alert(result); // Show "Invalid Password" or "User Not Found"
+                    alert(result);
+                    document.getElementById('connection-status').innerText = "Authentication Failed.";
                 }
             } catch (e) {
-                alert("Backend Error: Ensure Spring Boot is running.");
+                console.error(e);
+                alert("Cloud Connection Error: Ensure your Render backend is 'Live'. It might take 30s to wake up.");
+                document.getElementById('connection-status').innerText = "Backend Offline.";
             }
         }
     </script>
